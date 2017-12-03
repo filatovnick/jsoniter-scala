@@ -2,7 +2,7 @@ package com.github.plokhotnyuk.jsoniter_scala
 
 import java.io.{IOException, OutputStream}
 
-import com.github.plokhotnyuk.jsoniter_scala.JsonWriter.{escapedChars, _}
+import com.github.plokhotnyuk.jsoniter_scala.JsonWriter._
 
 import scala.annotation.switch
 import scala.collection.breakOut
@@ -10,6 +10,7 @@ import scala.collection.breakOut
 case class WriterConfig(
     indentionStep: Int = 0,
     escapeUnicode: Boolean = false,
+    escapedAsciiChars: Array[Byte] = JsonWriter.defaultEscapedAsciiChars,
     preferredBufSize: Int = 16384)
 
 final class JsonWriter private[jsoniter_scala](
@@ -200,7 +201,7 @@ final class JsonWriter private[jsoniter_scala](
 
   private def writeString(s: String, from: Int, to: Int): Unit = count = {
     var pos = ensureBufferCapacity((to - from) + 2) // 1 byte per char (suppose that they are ASCII only) + make room for the quotes
-    val escapedChars = JsonWriter.escapedChars
+    val escapedChars = config.escapedAsciiChars
     val buf = this.buf
     var i = from
     var ch: Char = 0
@@ -226,7 +227,7 @@ final class JsonWriter private[jsoniter_scala](
 
   private def writeEncodedString(s: String, from: Int, to: Int): Int = {
     var pos = ensureBufferCapacity((to - from) * 6 + 1) // max 6 bytes per char for escaped unicode + the closing quotes
-    val escapedChars = JsonWriter.escapedChars
+    val escapedChars = config.escapedAsciiChars
     val buf = this.buf
     var i = from
     var ch1: Char = 0
@@ -271,7 +272,7 @@ final class JsonWriter private[jsoniter_scala](
 
   private def writeEscapedString(s: String, from: Int, to: Int): Int = {
     var pos = ensureBufferCapacity((to - from) * 6 + 1) // max 6 bytes per char for escaped unicode + the closing quotes
-    val escapedChars = JsonWriter.escapedChars
+    val escapedChars = config.escapedAsciiChars
     val buf = this.buf
     var i = from
     var ch1: Char = 0
@@ -308,7 +309,7 @@ final class JsonWriter private[jsoniter_scala](
     pos += 1
     pos = {
       if (ch < 128) { // 1 byte, 7 bits: 0xxxxxxx
-        val esc = escapedChars(ch)
+        val esc = config.escapedAsciiChars(ch)
         if (esc == 0) {
           buf(pos) = ch.toByte
           pos + 1
@@ -536,7 +537,20 @@ object JsonWriter {
     override def initialValue(): JsonWriter = new JsonWriter
   }
   private val defaultConfig = WriterConfig()
-  private val escapedChars: Array[Byte] = (0 to 127).map { b =>
+  private val digits: Array[Short] = (0 to 999).map { i =>
+    (((if (i < 10) 2 else if (i < 100) 1 else 0) << 12) + // this nibble encodes number of leading zeroes
+      ((i / 100) << 8) + (((i / 10) % 10) << 4) + i % 10).toShort // decimal digit per nibble
+  }(breakOut)
+  private val minIntBytes: Array[Byte] = "-2147483648".getBytes
+  private val minLongBytes: Array[Byte] = "-9223372036854775808".getBytes
+
+  final def defaultEscapedAsciiChars: Array[Byte] = {
+    val escChars: Array[Byte] = requiredEscapedAsciiChars
+    escChars(127) = 255.toByte
+    escChars
+  }
+
+  final def requiredEscapedAsciiChars: Array[Byte] = (0 to 127).map { b =>
     ((b: @switch) match {
       case '\n' => 'n'
       case '\r' => 'r'
@@ -545,16 +559,10 @@ object JsonWriter {
       case '\f' => 'f'
       case '\\' => '\\'
       case '\"' => '"'
-      case x if x <= 31 || x >= 127 => 255 // hex escaped chars
+      case x if x <= 31 => 255 // hex escaped chars
       case _ => 0 // non-escaped chars
     }).toByte
   }(breakOut)
-  private val digits: Array[Short] = (0 to 999).map { i =>
-    (((if (i < 10) 2 else if (i < 100) 1 else 0) << 12) + // this nibble encodes number of leading zeroes
-      ((i / 100) << 8) + (((i / 10) % 10) << 4) + i % 10).toShort // decimal digit per nibble
-  }(breakOut)
-  private val minIntBytes: Array[Byte] = "-2147483648".getBytes
-  private val minLongBytes: Array[Byte] = "-9223372036854775808".getBytes
 
   /**
     * Serialize the `x` argument to the provided output stream in UTF-8 encoding of JSON format

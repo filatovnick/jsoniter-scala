@@ -13,6 +13,7 @@ to get maximum performance of JSON parsing & serialization.
 - Support of UTF-8 encoding
 - Configurable serialization of strings with escaped Unicode characters to be ASCII compatible
 - Configurable indenting of output
+- Configurable serialization of strings with custom escaped ASCII characters
 - Parsing of strings with escaped characters for JSON field names, keys & values 
 - Codecs can be generated for primitives, boxed primitives, enums, `String`, `BigInt`, `BigDecimal`, `Option`, Scala 
   collections, arrays, module classes, value classes and case classes with values/fields having any of types listed here 

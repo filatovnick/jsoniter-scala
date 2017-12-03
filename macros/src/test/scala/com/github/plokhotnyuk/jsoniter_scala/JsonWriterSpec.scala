@@ -103,6 +103,18 @@ class JsonWriterSpec extends WordSpec with Matchers with PropertyChecks {
         }
       }
     }
+    "write strings with custom escaped ASCII chars if it is specified by provided writer config" in {
+      val customEscapedAsciiChars = JsonWriter.defaultEscapedAsciiChars
+      customEscapedAsciiChars('/') = '/'
+
+      def check(s: String): Unit =
+        withWriter(WriterConfig(escapedAsciiChars = customEscapedAsciiChars))(_.writeVal(s)) shouldBe
+          "\"" + s.flatMap(ch => if (ch == '/') "\\/" else toEscaped(ch)) + "\""
+
+      forAll(Gen.listOf(allwaysEscapedChars)) { (cs: List[Char]) =>
+        check(cs.mkString + '/')
+      }
+    }
     "write strings with valid character surrogate pair" in {
       def check(s: String): Unit = {
         withWriter(WriterConfig(escapeUnicode = false))(_.writeVal(s)) shouldBe "\"" + s + "\""
@@ -145,6 +157,15 @@ class JsonWriterSpec extends WordSpec with Matchers with PropertyChecks {
         whenever(isEscapedAscii(ch) || ch >= 128) {
           withWriter(WriterConfig(escapeUnicode = true))(_.writeVal(ch)) shouldBe "\"" + toEscaped(ch) + "\""
         }
+      }
+    }
+    "write string with custom escaped ASCII chars if it is specified by provided writer config" in {
+      val customEscapedAsciiChars = JsonWriter.defaultEscapedAsciiChars
+      customEscapedAsciiChars('/') = '/'
+
+      forAll(Gen.oneOf(allwaysEscapedChars, Gen.const('/'))) { (ch: Char) =>
+        withWriter(WriterConfig(escapedAsciiChars = customEscapedAsciiChars))(_.writeVal(ch)) shouldBe
+          "\"" + (if (ch == '/') "\\/" else toEscaped(ch)) + "\""
       }
     }
     "throw i/o exception in case of surrogate pair character" in {
