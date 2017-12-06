@@ -40,7 +40,8 @@ import scala.collection.mutable
   "-XX:ReservedCodeCacheSize=256m",
   "-XX:-UseBiasedLocking",
   "-XX:+AlwaysPreTouch",
-  "-XX:+UseParallelGC"
+  "-XX:+UseParallelGC",
+  "-XX:-CompactStrings"
 ))
 @BenchmarkMode(Array(Mode.Throughput))
 @OutputTimeUnit(TimeUnit.SECONDS)
