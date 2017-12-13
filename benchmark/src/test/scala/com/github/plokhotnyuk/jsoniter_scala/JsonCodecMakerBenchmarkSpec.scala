@@ -86,11 +86,13 @@ class JsonCodecMakerBenchmarkSpec extends WordSpec with Matchers {
       benchmark.readAdtPlay() shouldBe benchmark.adtObj
       benchmark.readAsciiStringCirce() shouldBe benchmark.asciiStringObj
       benchmark.readAsciiStringJackson() shouldBe benchmark.asciiStringObj
+      benchmark.readAsciiStringJsonal() shouldBe benchmark.asciiStringObj
       benchmark.readAsciiStringJsoniter() shouldBe benchmark.asciiStringObj
       // FIXME: find proper way to parse string value in Play JSON
       //benchmark.readAsciiStringPlay() shouldBe benchmark.asciiStringObj
       benchmark.readNonAsciiStringCirce() shouldBe benchmark.nonAsciiStringObj
       benchmark.readNonAsciiStringJackson() shouldBe benchmark.nonAsciiStringObj
+      benchmark.readNonAsciiStringJsonal() shouldBe benchmark.nonAsciiStringObj
       benchmark.readNonAsciiStringJsoniter() shouldBe benchmark.nonAsciiStringObj
       // FIXME: find proper way to parse string value in Play JSON
       //benchmark.readNonAsciiStringPlay() shouldBe benchmark.nonAsciiStringObj

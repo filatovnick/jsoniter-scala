@@ -280,7 +280,10 @@ class JsonCodecMakerBenchmark {
   def readAsciiStringCirce(): String = decode[String](new String(asciiStringJsonBytes, UTF_8)).fold(throw _, x => x)
 
   @Benchmark
-  def readAsciiStringJackson(): String = jacksonMapper.readValue[String](asciiStringJsonBytes)
+  def readAsciiStringJsonal(): String = kse.jsonal.Json.parse(new String(asciiStringJsonBytes, UTF_8)).fold(_.msg, _.stringOrNull)
+
+  @Benchmark
+  def readAsciiStringJackson(): String = JsonReader.read(stringCodec, asciiStringJsonBytes)
 
   @Benchmark
   def readAsciiStringJsoniter(): String = JsonReader.read(stringCodec, asciiStringJsonBytes)
@@ -294,6 +297,9 @@ class JsonCodecMakerBenchmark {
 
   @Benchmark
   def readNonAsciiStringJackson(): String = jacksonMapper.readValue[String](nonAsciiStringJsonBytes)
+
+  @Benchmark
+  def readNonAsciiStringJsonal(): String = kse.jsonal.Json.parse(new String(asciiStringJsonBytes, UTF_8)).fold(_.msg, _.stringOrNull)
 
   @Benchmark
   def readNonAsciiStringJsoniter(): String = JsonReader.read(stringCodec, nonAsciiStringJsonBytes)
