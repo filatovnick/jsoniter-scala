@@ -1,5 +1,6 @@
 package com.github.plokhotnyuk.jsoniter_scala.macros
 
+import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets._
 import java.util.concurrent.TimeUnit
 
@@ -280,7 +281,7 @@ class JsonCodecMakerBenchmark {
   def readAsciiStringCirce(): String = decode[String](new String(asciiStringJsonBytes, UTF_8)).fold(throw _, x => x)
 
   @Benchmark
-  def readAsciiStringJsonal(): String = kse.jsonal.Json.parse(new String(asciiStringJsonBytes, UTF_8)).fold(_.msg, _.stringOrNull)
+  def readAsciiStringJsonal(): String = kse.jsonal.Json.parse(ByteBuffer.wrap(asciiStringJsonBytes)).fold(_.msg, _.stringOrNull)
 
   @Benchmark
   def readAsciiStringJackson(): String = JsonReader.read(stringCodec, asciiStringJsonBytes)
@@ -299,7 +300,7 @@ class JsonCodecMakerBenchmark {
   def readNonAsciiStringJackson(): String = jacksonMapper.readValue[String](nonAsciiStringJsonBytes)
 
   @Benchmark
-  def readNonAsciiStringJsonal(): String = kse.jsonal.Json.parse(new String(asciiStringJsonBytes, UTF_8)).fold(_.msg, _.stringOrNull)
+  def readNonAsciiStringJsonal(): String = kse.jsonal.Json.parse(ByteBuffer.wrap(nonAsciiStringJsonBytes)).fold(_.msg, _.stringOrNull)
 
   @Benchmark
   def readNonAsciiStringJsoniter(): String = JsonReader.read(stringCodec, nonAsciiStringJsonBytes)
