@@ -1,5 +1,6 @@
 package com.github.plokhotnyuk.jsoniter_scala.macros
 
+import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets._
 import java.util.concurrent.TimeUnit
 
@@ -12,7 +13,7 @@ import com.github.plokhotnyuk.jsoniter_scala.macros.JacksonSerDesers._
 import com.github.plokhotnyuk.jsoniter_scala.macros.PlayJsonFormats._
 import com.github.plokhotnyuk.jsoniter_scala.macros.JsoniterCodecs._
 import io.circe.generic.auto._
-import io.circe.parser._
+import io.circe.jawn._
 import io.circe.syntax._
 import org.openjdk.jmh.annotations._
 import play.api.libs.json.{Json, _}
@@ -92,7 +93,7 @@ class JsonCodecMakerBenchmark {
 
   @Benchmark
   def missingReqFieldCirce(): String =
-    decode[MissingReqFields](new String(missingReqFieldJsonBytes, UTF_8)).fold(_.getMessage, _ => null)
+    decodeByteBuffer[MissingReqFields](ByteBuffer.wrap(missingReqFieldJsonBytes)).fold(_.getMessage, _ => null)
 
   @Benchmark
   def missingReqFieldJackson(): String =
@@ -135,7 +136,7 @@ class JsonCodecMakerBenchmark {
     }
 
   @Benchmark
-  def readAnyRefsCirce(): AnyRefs = decode[AnyRefs](new String(anyRefsJsonBytes, UTF_8)).fold(throw _, x => x)
+  def readAnyRefsCirce(): AnyRefs = decodeByteBuffer[AnyRefs](ByteBuffer.wrap(anyRefsJsonBytes)).fold(throw _, x => x)
 
   @Benchmark
   def readAnyRefsJackson(): AnyRefs = jacksonMapper.readValue[AnyRefs](anyRefsJsonBytes)
@@ -147,7 +148,7 @@ class JsonCodecMakerBenchmark {
   def readAnyRefsPlay(): AnyRefs = Json.parse(anyRefsJsonBytes).as[AnyRefs](anyRefsFormat)
 
   @Benchmark
-  def readArraysCirce(): Arrays = decode[Arrays](new String(arraysJsonBytes, UTF_8)).fold(throw _, x => x)
+  def readArraysCirce(): Arrays = decodeByteBuffer[Arrays](ByteBuffer.wrap(arraysJsonBytes)).fold(throw _, x => x)
 
   @Benchmark
   def readArraysJackson(): Arrays = jacksonMapper.readValue[Arrays](arraysJsonBytes)
@@ -160,7 +161,7 @@ class JsonCodecMakerBenchmark {
 
 /* FIXME: Circe doesn't support parsing of bitsets
   @Benchmark
-  def readBitSetsCirce(): BitSets = decode[BitSets](new String(bitSetsJson, StandardCharsets.UTF_8)).fold(throw _, x => x)
+  def readBitSetsCirce(): BitSets = decodeByteBuffer[BitSets](ByteBuffer.wrap(bitSetsJsonBytes)).fold(throw _, x => x)
 */
 
   @Benchmark
@@ -173,7 +174,8 @@ class JsonCodecMakerBenchmark {
   def readBitSetsPlay(): BitSets = Json.parse(bitSetsJsonBytes).as[BitSets](bitSetsFormat)
 
   @Benchmark
-  def readIterablesCirce(): Iterables = decode[Iterables](new String(iterablesJsonBytes, UTF_8)).fold(throw _, x => x)
+  def readIterablesCirce(): Iterables =
+    decodeByteBuffer[Iterables](ByteBuffer.wrap(iterablesJsonBytes)).fold(throw _, x => x)
 
   @Benchmark
   def readIterablesJackson(): Iterables = jacksonMapper.readValue[Iterables](iterablesJsonBytes)
@@ -185,21 +187,25 @@ class JsonCodecMakerBenchmark {
   def readIterablesPlay(): Iterables = Json.parse(iterablesJsonBytes).as[Iterables](iterablesFormat)
 
   @Benchmark
-  def readMutableIterablesCirce(): MutableIterables = decode[MutableIterables](new String(mutableIterablesJsonBytes, UTF_8)).fold(throw _, x => x)
+  def readMutableIterablesCirce(): MutableIterables =
+    decodeByteBuffer[MutableIterables](ByteBuffer.wrap(mutableIterablesJsonBytes)).fold(throw _, x => x)
 
 /* FIXME: Jackson-module-scala doesn't support parsing of tree sets
   @Benchmark
-  def readMutableIterablesJackson(): MutableIterables = jacksonMapper.readValue[MutableIterables](mutableIterablesJson)
+  def readMutableIterablesJackson(): MutableIterables =
+    jacksonMapper.readValue[MutableIterables](mutableIterablesJsonBytes)
 */
 
   @Benchmark
-  def readMutableIterablesJsoniter(): MutableIterables = JsonReader.read(mutableIterablesCodec, mutableIterablesJsonBytes)
+  def readMutableIterablesJsoniter(): MutableIterables =
+    JsonReader.read(mutableIterablesCodec, mutableIterablesJsonBytes)
 
   @Benchmark
-  def readMutableIterablesPlay(): MutableIterables = Json.parse(mutableIterablesJsonBytes).as[MutableIterables](mutableIterablesFormat)
+  def readMutableIterablesPlay(): MutableIterables =
+    Json.parse(mutableIterablesJsonBytes).as[MutableIterables](mutableIterablesFormat)
 
   @Benchmark
-  def readMapsCirce(): Maps = decode[Maps](new String(mapsJsonBytes, UTF_8)) .fold(throw _, x => x)
+  def readMapsCirce(): Maps = decodeByteBuffer[Maps](ByteBuffer.wrap(mapsJsonBytes)) .fold(throw _, x => x)
 
   @Benchmark
   def readMapsJackson(): Maps = jacksonMapper.readValue[Maps](mapsJsonBytes)
@@ -212,7 +218,8 @@ class JsonCodecMakerBenchmark {
 
 /* FIXME: Circe doesn't support parsing of mutable maps
   @Benchmark
-  def readMutableMapsCirce(): MutableMaps = decode[MutableMaps](new String(mutableMapsJson, StandardCharsets.UTF_8)).fold(throw _, x => x)
+  def readMutableMapsCirce(): MutableMaps =
+    decodeByteBuffer[MutableMaps](ByteBuffer.wrap(mutableMapsJsonBytes)).fold(throw _, x => x)
 */
 
   @Benchmark
@@ -226,7 +233,8 @@ class JsonCodecMakerBenchmark {
 
 /* FIXME: Circe doesn't support parsing of int & long maps
   @Benchmark
-  def readIntAndLongMapsCirce(): IntAndLongMaps = decode[IntAndLongMaps](new String(intAndLongMapsJson, StandardCharsets.UTF_8)).fold(throw _, x => x)
+  def readIntAndLongMapsCirce(): IntAndLongMaps =
+    decodeByteBuffer[IntAndLongMaps](ByteBuffer.wrap(intAndLongMapsJson)).fold(throw _, x => x)
 */
 
 /* FIXME: Jackson-module-scala doesn't support parsing of int & long maps
@@ -241,7 +249,8 @@ class JsonCodecMakerBenchmark {
   def readIntAndLongMapsPlay(): IntAndLongMaps = Json.parse(intAndLongMapsJsonBytes).as[IntAndLongMaps](intAndLongMapsFormat)
 
   @Benchmark
-  def readPrimitivesCirce(): Primitives = decode[Primitives](new String(primitivesJsonBytes, UTF_8)).fold(throw _, x => x)
+  def readPrimitivesCirce(): Primitives =
+    decodeByteBuffer[Primitives](ByteBuffer.wrap(primitivesJsonBytes)).fold(throw _, x => x)
 
   @Benchmark
   def readPrimitivesJackson(): Primitives = jacksonMapper.readValue[Primitives](primitivesJsonBytes)
@@ -253,7 +262,8 @@ class JsonCodecMakerBenchmark {
   def readPrimitivesPlay(): Primitives = Json.parse(primitivesJsonBytes).as[Primitives](primitivesFormat)
 
   @Benchmark
-  def readExtractFieldsCirce(): ExtractFields = decode[ExtractFields](new String(extractFieldsJsonBytes, UTF_8)).fold(throw _, x => x)
+  def readExtractFieldsCirce(): ExtractFields =
+    decodeByteBuffer[ExtractFields](ByteBuffer.wrap(extractFieldsJsonBytes)).fold(throw _, x => x)
 
   @Benchmark
   def readExtractFieldsJackson(): ExtractFields = jacksonMapper.readValue[ExtractFields](extractFieldsJsonBytes)
@@ -265,7 +275,7 @@ class JsonCodecMakerBenchmark {
   def readExtractFieldsPlay(): ExtractFields = Json.parse(extractFieldsJsonBytes).as[ExtractFields](extractFieldsFormat)
 
   @Benchmark
-  def readAdtCirce(): AdtBase = decode[AdtBase](new String(adtJsonBytes, UTF_8)).fold(throw _, x => x)
+  def readAdtCirce(): AdtBase = decodeByteBuffer[AdtBase](ByteBuffer.wrap(adtJsonBytes)).fold(throw _, x => x)
 
   @Benchmark
   def readAdtJackson(): AdtBase = jacksonMapper.readValue[AdtBase](adtJsonBytes)
@@ -277,7 +287,8 @@ class JsonCodecMakerBenchmark {
   def readAdtPlay(): AdtBase = Json.parse(adtJsonBytes).as[AdtBase](adtFormat)
 
   @Benchmark
-  def readAsciiStringCirce(): String = decode[String](new String(asciiStringJsonBytes, UTF_8)).fold(throw _, x => x)
+  def readAsciiStringCirce(): String =
+    decodeByteBuffer[String](ByteBuffer.wrap(asciiStringJsonBytes)).fold(throw _, x => x)
 
   @Benchmark
   def readAsciiStringJackson(): String = jacksonMapper.readValue[String](asciiStringJsonBytes)
@@ -290,7 +301,8 @@ class JsonCodecMakerBenchmark {
   def readAsciiStringPlay(): String = Json.parse(asciiStringJson).toString()
 */
   @Benchmark
-  def readNonAsciiStringCirce(): String = decode[String](new String(nonAsciiStringJsonBytes, UTF_8)).fold(throw _, x => x)
+  def readNonAsciiStringCirce(): String =
+    decodeByteBuffer[String](ByteBuffer.wrap(nonAsciiStringJsonBytes)).fold(throw _, x => x)
 
   @Benchmark
   def readNonAsciiStringJackson(): String = jacksonMapper.readValue[String](nonAsciiStringJsonBytes)
@@ -303,7 +315,8 @@ class JsonCodecMakerBenchmark {
   def readNonAsciiStringPlay(): String = Json.parse(nonAsciiStringJson).toString()
 */
   @Benchmark
-  def readGoogleMapsAPICirce(): DistanceMatrix = decode[DistanceMatrix](new String(GoogleMapsAPI.jsonBytes, UTF_8)).fold(throw _, x => x)
+  def readGoogleMapsAPICirce(): DistanceMatrix =
+    decodeByteBuffer[DistanceMatrix](ByteBuffer.wrap(GoogleMapsAPI.jsonBytes)).fold(throw _, x => x)
 
   @Benchmark
   def readGoogleMapsAPIJackson(): DistanceMatrix = jacksonMapper.readValue[DistanceMatrix](GoogleMapsAPI.jsonBytes)
@@ -315,7 +328,8 @@ class JsonCodecMakerBenchmark {
   def readGoogleMapsAPIPlay(): DistanceMatrix = Json.parse(GoogleMapsAPI.jsonBytes).as[DistanceMatrix](googleMapsAPIFormat)
 
   @Benchmark
-  def readTwitterAPICirce(): Seq[Tweet] = decode[Seq[Tweet]](new String(TwitterAPI.jsonBytes, UTF_8)).fold(throw _, x => x)
+  def readTwitterAPICirce(): Seq[Tweet] =
+    decodeByteBuffer[Seq[Tweet]](ByteBuffer.wrap(TwitterAPI.jsonBytes)).fold(throw _, x => x)
 
   @Benchmark
   def readTwitterAPIJackson(): Seq[Tweet] = jacksonMapper.readValue[Seq[Tweet]](TwitterAPI.jsonBytes)
